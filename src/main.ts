@@ -1,7 +1,7 @@
 import "@fontsource/bungee";
 import "@fontsource-variable/onest";
 import "./gaya.css";
-import { type NamaBingkai, type Warna, DAFTAR_BINGKAI, cetak, contohCss, kolomWarna, labelBingkai, rakit, tembus, warnaAwal } from "./cetak";
+import { type NamaBingkai, type Warna, DAFTAR_BINGKAI, GRUP_BINGKAI, cetak, contohCss, kolomWarna, labelBingkai, rakit, tembus, warnaAwal } from "./cetak";
 import { type NamaSaring, DAFTAR_SARING, SARING, keCss } from "./saring";
 import { bip, rana } from "./suara";
 import { kontras, sahHeks } from "./warna";
@@ -128,17 +128,22 @@ buatPil($("pil-timer"), "timer", [3, 5, 10].map((n) => ({ nilai: n, label: `${n}
   pil.timer = v;
   ingat();
 });
-buatPil(
-  $("pil-bingkai"),
-  "bingkai",
-  DAFTAR_BINGKAI.map((n) => ({ nilai: n, label: labelBingkai(n), isi: `<i class="contoh" style="background:${contohCss(n, pil.warna[n])}"></i>` })),
-  pil.bingkai,
-  (v) => {
-    pil.bingkai = v;
-    ingat();
-    buatKolomWarna();
-    if (tercetak) gambarHasil(false);
-  },
+/* bingkai dikelompokkan, dipisah sekat pendek; satu grup radio "bingkai" */
+const wadahBingkai = $("pil-bingkai");
+wadahBingkai.innerHTML = GRUP_BINGKAI.map(() => `<div class="pil"></div>`).join(`<hr class="sekat" />`);
+GRUP_BINGKAI.forEach((grup, i) =>
+  buatPil(
+    wadahBingkai.querySelectorAll<HTMLElement>(".pil")[i],
+    "bingkai",
+    grup.map((n) => ({ nilai: n, label: labelBingkai(n), isi: `<i class="contoh" style="background:${contohCss(n, pil.warna[n])}"></i>` })),
+    pil.bingkai,
+    (v) => {
+      pil.bingkai = v;
+      ingat();
+      buatKolomWarna();
+      if (tercetak) gambarHasil(false);
+    },
+  ),
 );
 
 /* ---------- warna bingkai, bebas diubah ---------- */

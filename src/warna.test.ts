@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DAFTAR_BINGKAI, contohCss, kolomWarna, rakit, warnaAwal } from "./cetak";
+import { DAFTAR_BINGKAI, GRUP_BINGKAI, contohCss, kolomWarna, rakit, warnaAwal } from "./cetak";
 import { campur, kontras, rgba, sahHeks } from "./warna";
 
 describe("bantuan warna", () => {
@@ -51,4 +51,8 @@ describe("warna bingkai bisa diubah", () => {
     expect(contohCss("permen", { aksen: ["#00ff00"] })).toContain("#00ff00");
     expect(contohCss("senja", { aksen: ["#111111", "#222222", "#333333"] })).toBe("linear-gradient(#111111, #222222, #333333)");
   });
+});
+
+it("setiap bingkai muncul tepat sekali di kelompok tombol", () => {
+  expect(GRUP_BINGKAI.flat().sort()).toEqual([...DAFTAR_BINGKAI].sort());
 });

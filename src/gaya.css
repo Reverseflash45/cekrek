@@ -664,6 +664,23 @@ legend {
   display: none;
 }
 
+/* bingkai: tiga kelompok, kolom sama lebar supaya rata */
+.pil-bingkai .pil {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.pil-bingkai .pil label {
+  padding-inline: 10px;
+}
+.sekat {
+  width: 32px;
+  height: 3px;
+  margin: 10px 0;
+  border: 0;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
 /* pemilih warna bingkai */
 .kolom-warna {
   display: flex;

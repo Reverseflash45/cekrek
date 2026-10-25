@@ -113,6 +113,13 @@ export function contohCss(n: NamaBingkai, ubah?: Partial<Warna>) {
 
 export const DAFTAR_BINGKAI = Object.keys(RESEP) as NamaBingkai[];
 
+/** Kelompok di tombol pilihan: warna polos, bermotif, lalu bentuk khusus. */
+export const GRUP_BINGKAI: NamaBingkai[][] = [
+  ["putih", "hitam", "pink", "mint", "langit", "ungu"],
+  ["tirai", "piknik", "polkadot", "permen", "malam", "senja"],
+  ["struk", "karcis"],
+];
+
 export type Pesanan = {
   tata: Tata;
   foto: (CanvasImageSource & { width: number; height: number } | null)[];
