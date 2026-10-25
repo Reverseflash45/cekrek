@@ -7,6 +7,7 @@ Photobooth di browser. Nyalakan kamera, tekan **jepret!**, lalu tunggu hitung mu
 - 6 susunan, sampai 8 foto: strip 4 (2×6 inci), strip 3, 4 kotak, 6 kotak, 8 kotak (4R), polaroid
 - 5 filter: asli, hitam putih, jadul, hangat, nyala
 - 14 bingkai: polos (putih, hitam, pink, mint, langit, ungu), bermotif (tirai, piknik, polkadot, permen, malam berbintang, senja), plus struk ("TOTAL SENYUM: 4") dan karcis
+- warna latar, motif, dan tulisan tiap bingkai bisa diubah bebas (diingat di browser-mu)
 - tulisan di bawah foto bisa diganti
 - hitung mundur 3, 5, atau 10 detik
 - foto yang kurang pas bisa diulang satu per satu

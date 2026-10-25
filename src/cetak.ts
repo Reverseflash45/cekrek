@@ -1,6 +1,7 @@
 /* Menyusun foto-foto jadi satu cetakan di kanvas. */
 import { type Saring, acak, terapkan } from "./saring";
 import { type Kotak, type Tata, potongTengah, tanggalPendek } from "./tata";
+import { campur, rgba, sahHeks } from "./warna";
 
 export const SKALA = 2;
 
@@ -10,59 +11,107 @@ export type NamaBingkai =
 
 type Pola = "lipatan" | "kotak" | "titik" | "garis" | "bintang" | "gradasi";
 
-type Bingkai = {
+/** Warna yang bisa diubah pengguna. */
+export type Warna = { latar: string; tinta: string; aksen: string[] };
+
+type Resep = Warna & {
   label: string;
-  latar: string;
-  tinta: string;
-  redup: string;
-  kosong: string;
+  pola?: Pola;
+  /** papan polos di belakang tulisan supaya tetap terbaca di atas motif */
+  plat?: "latar" | "aksen";
   /** tepi sobek transparan → simpan sebagai PNG */
   tembus?: boolean;
-  pola?: Pola;
-  /** warna motif; untuk gradasi: warna-warna dari atas ke bawah */
-  aksen?: string[];
-  /** papan polos di belakang tulisan supaya tetap terbaca di atas motif */
-  plat?: string;
-  /** latar CSS untuk contoh kecil di tombol pilihan */
-  contoh: string;
 };
 
-export const BINGKAI: Record<NamaBingkai, Bingkai> = {
-  putih: { label: "putih", latar: "#fffdf8", tinta: "#1c1b22", redup: "#77737f", kosong: "#ece8df", contoh: "#fffdf8" },
-  hitam: { label: "hitam", latar: "#18171c", tinta: "#f6f1e7", redup: "#9a95a3", kosong: "#2a2830", contoh: "#18171c" },
-  pink: { label: "pink", latar: "#ffc9dc", tinta: "#5c1430", redup: "#9c4f6d", kosong: "#f7b3cb", contoh: "#ffc9dc" },
-  mint: { label: "mint", latar: "#bfead8", tinta: "#0f3d2c", redup: "#3d7760", kosong: "#a6dcc6", contoh: "#bfead8" },
-  langit: { label: "langit", latar: "#bcd6ff", tinta: "#132a55", redup: "#4a6496", kosong: "#a5c6f7", contoh: "#bcd6ff" },
-  ungu: { label: "ungu", latar: "#d8c9ff", tinta: "#2a1858", redup: "#68569e", kosong: "#c6b3f7", contoh: "#d8c9ff" },
-  tirai: {
-    label: "tirai", latar: "#b3172b", tinta: "#fff6ea", redup: "#f4b7b9", kosong: "#951226", pola: "lipatan",
-    contoh: "repeating-linear-gradient(90deg, #8a0f20 0 3px, #b3172b 3px 7px)",
-  },
-  piknik: {
-    label: "piknik", latar: "#fff6f3", tinta: "#7a1020", redup: "#9e4a55", kosong: "#f3d5d5", pola: "kotak", aksen: ["rgba(214,40,57,0.4)"], plat: "#fff6f3",
-    contoh: "repeating-linear-gradient(0deg, rgba(214,40,57,.4) 0 4px, transparent 4px 8px), repeating-linear-gradient(90deg, rgba(214,40,57,.4) 0 4px, #fff6f3 4px 8px)",
-  },
-  polkadot: {
-    label: "polkadot", latar: "#1f3a93", tinta: "#1f3a93", redup: "#55669f", kosong: "#2c4aa8", pola: "titik", aksen: ["#fffdf8"], plat: "#fffdf8",
-    contoh: "radial-gradient(#fffdf8 1.6px, transparent 2.1px) 0 0 / 6px 6px, #1f3a93",
-  },
-  permen: {
-    label: "permen", latar: "#fffdf8", tinta: "#7a1d45", redup: "#a8557a", kosong: "#ffe0ec", pola: "garis", aksen: ["#ff8fb8"], plat: "#fffdf8",
-    contoh: "repeating-linear-gradient(45deg, #ff8fb8 0 3px, #fffdf8 3px 6px)",
-  },
-  malam: {
-    label: "malam", latar: "#0f1636", tinta: "#fff6d6", redup: "#aab1d8", kosong: "#1b2452", pola: "bintang", aksen: ["#ffd23f", "#ffffff"], plat: "#0f1636",
-    contoh: "radial-gradient(#ffd23f 1px, transparent 1.6px) 0 0 / 7px 7px, #0f1636",
-  },
-  senja: {
-    label: "senja", latar: "#ff8a6b", tinta: "#ffffff", redup: "#f3e3ff", kosong: "#ff9d8a", pola: "gradasi", aksen: ["#ffb86b", "#ff6f91", "#7b4bd1"],
-    contoh: "linear-gradient(#ffb86b, #ff6f91, #7b4bd1)",
-  },
-  struk: { label: "struk", latar: "#f7f6f1", tinta: "#26252b", redup: "#7b7983", kosong: "#e6e4dd", tembus: true, contoh: "#f7f6f1" },
-  karcis: { label: "karcis", latar: "#ffd23f", tinta: "#1f1a0e", redup: "#6e5a17", kosong: "#f0c02c", tembus: true, contoh: "#ffd23f" },
+/** Bingkai siap gambar: warna turunan sudah dihitung. */
+type Bingkai = Resep & { redup: string; kosong: string; warnaPlat?: string };
+
+const RESEP: Record<NamaBingkai, Resep> = {
+  putih: { label: "putih", latar: "#fffdf8", tinta: "#1c1b22", aksen: [] },
+  hitam: { label: "hitam", latar: "#18171c", tinta: "#f6f1e7", aksen: [] },
+  pink: { label: "pink", latar: "#ffc9dc", tinta: "#5c1430", aksen: [] },
+  mint: { label: "mint", latar: "#bfead8", tinta: "#0f3d2c", aksen: [] },
+  langit: { label: "langit", latar: "#bcd6ff", tinta: "#132a55", aksen: [] },
+  ungu: { label: "ungu", latar: "#d8c9ff", tinta: "#2a1858", aksen: [] },
+  tirai: { label: "tirai", latar: "#b3172b", tinta: "#fff6ea", aksen: [], pola: "lipatan" },
+  piknik: { label: "piknik", latar: "#fff6f3", tinta: "#7a1020", aksen: ["#d62839"], pola: "kotak", plat: "latar" },
+  polkadot: { label: "polkadot", latar: "#1f3a93", tinta: "#1f3a93", aksen: ["#fffdf8"], pola: "titik", plat: "aksen" },
+  permen: { label: "permen", latar: "#fffdf8", tinta: "#7a1d45", aksen: ["#ff8fb8"], pola: "garis", plat: "latar" },
+  malam: { label: "malam", latar: "#0f1636", tinta: "#fff6d6", aksen: ["#ffd23f"], pola: "bintang", plat: "latar" },
+  senja: { label: "senja", latar: "#7b4bd1", tinta: "#ffffff", aksen: ["#ffb86b", "#ff6f91", "#7b4bd1"], pola: "gradasi" },
+  struk: { label: "struk", latar: "#f7f6f1", tinta: "#26252b", aksen: [], tembus: true },
+  karcis: { label: "karcis", latar: "#ffd23f", tinta: "#1f1a0e", aksen: [], tembus: true },
 };
 
-export const DAFTAR_BINGKAI = Object.keys(BINGKAI) as NamaBingkai[];
+export const labelBingkai = (n: NamaBingkai) => RESEP[n].label;
+
+export function warnaAwal(n: NamaBingkai): Warna {
+  const r = RESEP[n];
+  return { latar: r.latar, tinta: r.tinta, aksen: [...r.aksen] };
+}
+
+/** Kolom warna yang bisa diubah untuk tiap bingkai. */
+export function kolomWarna(n: NamaBingkai): { kunci: "latar" | "tinta" | number; label: string }[] {
+  const r = RESEP[n];
+  if (r.pola === "gradasi")
+    return [
+      { kunci: 0, label: "atas" },
+      { kunci: 1, label: "tengah" },
+      { kunci: 2, label: "bawah" },
+      { kunci: "tinta", label: "tulisan" },
+    ];
+  const k: ReturnType<typeof kolomWarna> = [{ kunci: "latar", label: "latar" }];
+  if (r.aksen.length) k.push({ kunci: 0, label: r.pola === "bintang" ? "bintang" : "motif" });
+  k.push({ kunci: "tinta", label: "tulisan" });
+  return k;
+}
+
+export function rakit(n: NamaBingkai, ubah?: Partial<Warna>): Bingkai {
+  const r = RESEP[n];
+  const aksen = r.aksen.map((a, i) => {
+    const u = ubah?.aksen?.[i];
+    return sahHeks(u) ? u : a;
+  });
+  const latar = sahHeks(ubah?.latar) ? ubah?.latar : r.latar;
+  const tinta = sahHeks(ubah?.tinta) ? ubah?.tinta : r.tinta;
+  const warnaPlat = r.plat === "latar" ? latar : r.plat === "aksen" ? aksen[0] : undefined;
+  // gradasi: kaki ada di warna paling bawah, jadi itu yang jadi "latar"
+  const dasar = r.pola === "gradasi" ? aksen[aksen.length - 1] : latar;
+  return {
+    ...r,
+    latar,
+    tinta,
+    aksen,
+    // tanggal duduk di atas plat bila ada, jadi pudarnya dihitung terhadap plat
+    redup: campur(tinta, warnaPlat ?? dasar, 0.42),
+    kosong: campur(dasar, tinta, 0.09),
+    warnaPlat,
+  };
+}
+
+/** Latar CSS untuk contoh kecil di tombol pilihan bingkai. */
+export function contohCss(n: NamaBingkai, ubah?: Partial<Warna>) {
+  const b = rakit(n, ubah);
+  const [a1] = b.aksen;
+  switch (b.pola) {
+    case "lipatan":
+      return `repeating-linear-gradient(90deg, ${campur(b.latar, "#000000", 0.25)} 0 3px, ${b.latar} 3px 7px)`;
+    case "kotak":
+      return `repeating-linear-gradient(0deg, ${rgba(a1, 0.4)} 0 4px, transparent 4px 8px), repeating-linear-gradient(90deg, ${rgba(a1, 0.4)} 0 4px, ${b.latar} 4px 8px)`;
+    case "titik":
+      return `radial-gradient(${a1} 1.6px, transparent 2.1px) 0 0 / 6px 6px, ${b.latar}`;
+    case "garis":
+      return `repeating-linear-gradient(45deg, ${a1} 0 3px, ${b.latar} 3px 6px)`;
+    case "bintang":
+      return `radial-gradient(${a1} 1px, transparent 1.6px) 0 0 / 7px 7px, ${b.latar}`;
+    case "gradasi":
+      return `linear-gradient(${b.aksen.join(", ")})`;
+    default:
+      return b.latar;
+  }
+}
+
+export const DAFTAR_BINGKAI = Object.keys(RESEP) as NamaBingkai[];
 
 export type Pesanan = {
   tata: Tata;
@@ -71,6 +120,8 @@ export type Pesanan = {
   bingkai: NamaBingkai;
   tulisan: string;
   waktu: Date;
+  /** warna bingkai yang diubah pengguna */
+  warna?: Partial<Warna>;
   /** nomor karcis & benih bintik film */
   nomor: number;
 };
@@ -132,7 +183,7 @@ function lipatan(ctx: CanvasRenderingContext2D, W: number, H: number) {
 /** Motif latar bingkai. Digambar sebelum foto, jadi hanya terlihat di tepi dan kaki. */
 function motif(ctx: CanvasRenderingContext2D, b: Bingkai, W: number, H: number, benih: number) {
   const S = SKALA;
-  const [a1 = "#000", a2 = a1, a3 = a2] = b.aksen ?? [];
+  const [a1 = "#000000", a2 = a1, a3 = a2] = b.aksen;
   switch (b.pola) {
     case "lipatan":
       lipatan(ctx, W, H);
@@ -140,7 +191,7 @@ function motif(ctx: CanvasRenderingContext2D, b: Bingkai, W: number, H: number, 
     case "kotak": {
       // kain piknik: pita mendatar dan tegak yang tumpang tindih
       const t = 22 * S;
-      ctx.fillStyle = a1;
+      ctx.fillStyle = rgba(a1, 0.4);
       for (let y = 0; y < H; y += t * 2) ctx.fillRect(0, y, W, t);
       for (let x = 0; x < W; x += t * 2) ctx.fillRect(x, 0, t, H);
       break;
@@ -174,7 +225,7 @@ function motif(ctx: CanvasRenderingContext2D, b: Bingkai, W: number, H: number, 
         const x = rnd() * W;
         const y = rnd() * H;
         const besar = rnd() < 0.12;
-        ctx.fillStyle = besar ? a1 : a2;
+        ctx.fillStyle = besar ? a1 : campur(a1, "#ffffff", 0.85);
         ctx.globalAlpha = besar ? 1 : 0.35 + rnd() * 0.5;
         if (besar) kilauan(ctx, x, y, (6 + rnd() * 6) * S);
         else {
@@ -253,11 +304,11 @@ function kakiBiasa(ctx: CanvasRenderingContext2D, p: Pesanan, b: Bingkai) {
   const uKecil = (besar ? 22 : 15) * S;
   const total = u + uKecil * 1.6;
   const atas = (k.y + k.h / 2) * S - total / 2;
-  if (b.plat) {
+  if (b.warnaPlat) {
     ctx.font = `${u}px ${HURUF_PAPAN}`;
     const lebar = Math.min(k.w * S, ctx.measureText(teks).width + 40 * S);
     const pad = 12 * S;
-    ctx.fillStyle = b.plat;
+    ctx.fillStyle = b.warnaPlat;
     ctx.beginPath();
     ctx.roundRect(cx - lebar / 2, atas - pad, lebar, total + pad * 1.6, 10 * S);
     ctx.fill();
@@ -360,7 +411,7 @@ export function cetak(p: Pesanan, kanvas = document.createElement("canvas")) {
   const S = SKALA;
   const W = p.tata.lebar * S;
   const H = p.tata.tinggi * S;
-  const b = BINGKAI[p.bingkai];
+  const b = rakit(p.bingkai, p.warna);
   kanvas.width = W;
   kanvas.height = H;
   const ctx = kanvas.getContext("2d")!;
@@ -383,4 +434,4 @@ export function cetak(p: Pesanan, kanvas = document.createElement("canvas")) {
   return kanvas;
 }
 
-export const tembus = (n: NamaBingkai) => Boolean(BINGKAI[n].tembus);
+export const tembus = (n: NamaBingkai) => Boolean(RESEP[n].tembus);

@@ -1,9 +1,10 @@
 import "@fontsource/bungee";
 import "@fontsource-variable/onest";
 import "./gaya.css";
-import { type NamaBingkai, BINGKAI, DAFTAR_BINGKAI, cetak, tembus } from "./cetak";
+import { type NamaBingkai, type Warna, DAFTAR_BINGKAI, cetak, contohCss, kolomWarna, labelBingkai, rakit, tembus, warnaAwal } from "./cetak";
 import { type NamaSaring, DAFTAR_SARING, SARING, keCss } from "./saring";
 import { bip, rana } from "./suara";
+import { kontras, sahHeks } from "./warna";
 import { type NamaTata, DAFTAR_TATA, namaBerkas, potongTengah, tata } from "./tata";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -30,8 +31,18 @@ const lampu = document.querySelector<HTMLElement>(".lampu")!;
 const geraklah = () => !matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ---------- pilihan, diingat di peramban ---------- */
-type Pilihan = { tata: NamaTata; saring: NamaSaring; bingkai: NamaBingkai; timer: number; cermin: boolean; suara: boolean; tulisan: string };
-const AWAL: Pilihan = { tata: "strip4", saring: "asli", bingkai: "putih", timer: 3, cermin: true, suara: true, tulisan: "" };
+type Pilihan = {
+  tata: NamaTata;
+  saring: NamaSaring;
+  bingkai: NamaBingkai;
+  timer: number;
+  cermin: boolean;
+  suara: boolean;
+  tulisan: string;
+  /** warna yang diubah, per bingkai */
+  warna: Partial<Record<NamaBingkai, Partial<Warna>>>;
+};
+const AWAL: Pilihan = { tata: "strip4", saring: "asli", bingkai: "putih", timer: 3, cermin: true, suara: true, tulisan: "", warna: {} };
 const KUNCI = "cekrek:pilihan";
 
 function muat(): Pilihan {
@@ -41,6 +52,7 @@ function muat(): Pilihan {
     if (!DAFTAR_SARING.includes(p.saring)) p.saring = AWAL.saring;
     if (!DAFTAR_BINGKAI.includes(p.bingkai)) p.bingkai = AWAL.bingkai;
     if (![3, 5, 10].includes(p.timer)) p.timer = AWAL.timer;
+    if (typeof p.warna !== "object" || p.warna === null || Array.isArray(p.warna)) p.warna = {};
     return p;
   } catch {
     return { ...AWAL };
@@ -119,14 +131,81 @@ buatPil($("pil-timer"), "timer", [3, 5, 10].map((n) => ({ nilai: n, label: `${n}
 buatPil(
   $("pil-bingkai"),
   "bingkai",
-  DAFTAR_BINGKAI.map((n) => ({ nilai: n, label: BINGKAI[n].label, isi: `<i class="contoh" style="background:${BINGKAI[n].contoh}"></i>` })),
+  DAFTAR_BINGKAI.map((n) => ({ nilai: n, label: labelBingkai(n), isi: `<i class="contoh" style="background:${contohCss(n, pil.warna[n])}"></i>` })),
   pil.bingkai,
   (v) => {
     pil.bingkai = v;
     ingat();
+    buatKolomWarna();
     if (tercetak) gambarHasil(false);
   },
 );
+
+/* ---------- warna bingkai, bebas diubah ---------- */
+const pilWarna = $("pil-warna");
+const awasWarna = $("awas-warna");
+const tombolWarnaAwal = $<HTMLButtonElement>("warna-awal");
+
+function warnaKini(n: NamaBingkai): Warna {
+  const a = warnaAwal(n);
+  const u = pil.warna[n] ?? {};
+  return {
+    latar: sahHeks(u.latar) ? u.latar : a.latar,
+    tinta: sahHeks(u.tinta) ? u.tinta : a.tinta,
+    aksen: a.aksen.map((x, i) => {
+      const y = u.aksen?.[i];
+      return sahHeks(y) ? y : x;
+    }),
+  };
+}
+
+function buatKolomWarna() {
+  const n = pil.bingkai;
+  const w = warnaKini(n);
+  pilWarna.innerHTML = kolomWarna(n)
+    .map(({ kunci, label }) => {
+      const nilai = typeof kunci === "number" ? w.aksen[kunci] : w[kunci];
+      return `<label class="cat"><input type="color" data-kunci="${kunci}" value="${nilai}" /><span>${label}</span></label>`;
+    })
+    .join("");
+  perbaruiWarna();
+}
+
+/** Contoh di tombol bingkai, peringatan kontras, dan tombol balikin. */
+function perbaruiWarna() {
+  const n = pil.bingkai;
+  const contoh = document.querySelector<HTMLElement>(`#pil-bingkai input[value="${n}"] + .contoh`);
+  if (contoh) contoh.style.background = contohCss(n, pil.warna[n]);
+  const b = rakit(n, pil.warna[n]);
+  const dasar = b.warnaPlat ?? (b.pola === "gradasi" ? b.aksen[b.aksen.length - 1] : b.latar);
+  awasWarna.textContent = kontras(b.tinta, dasar) < 3 ? "tulisannya bakal susah kebaca. coba warna tulisan yang lebih beda dari latarnya." : "";
+  tombolWarnaAwal.hidden = !pil.warna[n];
+}
+
+let jedaWarna = 0;
+pilWarna.addEventListener("input", (e) => {
+  const el = e.target as HTMLInputElement;
+  if (!sahHeks(el.value)) return;
+  const n = pil.bingkai;
+  const w = warnaKini(n);
+  const k = el.dataset.kunci!;
+  if (k === "latar" || k === "tinta") w[k] = el.value;
+  else w.aksen[Number(k)] = el.value;
+  pil.warna[n] = w;
+  ingat();
+  perbaruiWarna();
+  clearTimeout(jedaWarna);
+  jedaWarna = window.setTimeout(() => tercetak && gambarHasil(false), 140);
+});
+
+tombolWarnaAwal.addEventListener("click", () => {
+  delete pil.warna[pil.bingkai];
+  ingat();
+  buatKolomWarna();
+  if (tercetak) gambarHasil(false);
+});
+
+buatKolomWarna();
 
 const cbCermin = $<HTMLInputElement>("cermin");
 const cbSuara = $<HTMLInputElement>("suara");
@@ -455,7 +534,16 @@ async function gambarHasilSekarang(animasi: boolean) {
 async function susunHasil(animasi: boolean) {
   await Promise.all([document.fonts.load('40px "Bungee"'), document.fonts.load('500 20px "Onest Variable"')]);
   if (animasi) waktuCetak = new Date();
-  const kanvas = cetak({ tata: tataKini(), foto: foto(), saring: SARING[pil.saring], bingkai: pil.bingkai, tulisan: pil.tulisan, waktu: waktuCetak, nomor });
+  const kanvas = cetak({
+    tata: tataKini(),
+    foto: foto(),
+    saring: SARING[pil.saring],
+    bingkai: pil.bingkai,
+    warna: pil.warna[pil.bingkai],
+    tulisan: pil.tulisan,
+    waktu: waktuCetak,
+    nomor,
+  });
   const jenis = tembus(pil.bingkai) ? "image/png" : "image/jpeg";
   const blob = await new Promise<Blob | null>((ok) => kanvas.toBlob(ok, jenis, 0.92));
   if (!blob) return;
@@ -463,7 +551,7 @@ async function susunHasil(animasi: boolean) {
   urlHasil = URL.createObjectURL(blob);
   hasil.src = urlHasil;
   await hasil.decode().catch(() => {});
-  hasil.alt = `strip foto ${foto().length} jepretan, bingkai ${BINGKAI[pil.bingkai].label}, filter ${SARING[pil.saring].label}`;
+  hasil.alt = `strip foto ${foto().length} jepretan, bingkai ${labelBingkai(pil.bingkai)}, filter ${SARING[pil.saring].label}`;
   hasil.hidden = false;
   tadah.classList.add("ada");
   const ekor = jenis === "image/png" ? ".png" : ".jpg";
