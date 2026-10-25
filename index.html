@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Cekrek — photobooth di browser</title>
+    <meta
+      name="description"
+      content="Photobooth langsung dari browser: hitung mundur, 4 jepretan, lalu strip fotonya tercetak. Pilih bingkai struk, karcis, atau tirai. Fotomu diproses di perangkatmu, tidak diunggah."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://cekrek.raffstw.my.id/" />
+    <meta property="og:title" content="Cekrek — photobooth di browser" />
+    <meta property="og:description" content="3, 2, 1, cekrek! Strip foto 4 jepretan langsung dari kamera HP atau laptopmu." />
+    <meta property="og:image" content="https://cekrek.raffstw.my.id/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="canonical" href="https://cekrek.raffstw.my.id/" />
+    <meta name="theme-color" content="#b3172b" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#5e0b18" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/ikon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <main class="mesin">
+      <section class="bilik" aria-labelledby="papan">
+        <div class="papan-wadah">
+          <h1 class="papan" id="papan">Cekrek</h1>
+          <div class="lampu" aria-hidden="true"></div>
+        </div>
+        <p class="sapa">photobooth di browser. fotomu diproses di perangkatmu sendiri, nggak diunggah ke mana-mana.</p>
+
+        <div class="jendela" id="jendela">
+          <video id="video" playsinline muted></video>
+          <div class="vinyet" aria-hidden="true"></div>
+          <div class="hitung" id="hitung" aria-hidden="true"></div>
+          <div class="kilat" id="kilat" aria-hidden="true"></div>
+          <p class="bisik" id="bisik"></p>
+          <div class="ajak" id="ajak">
+            <button type="button" class="tombol-kamera" id="tombol-kamera">nyalakan kamera</button>
+            <label class="tombol-galeri">
+              atau pakai foto dari galeri
+              <input type="file" id="galeri" accept="image/*" multiple />
+            </label>
+            <p class="galat" id="galat" role="alert"></p>
+          </div>
+        </div>
+
+        <div class="tuas">
+          <ol class="jepretan" id="jepretan" aria-label="jepretan"></ol>
+          <button type="button" class="jepret" id="jepret">jepret!</button>
+        </div>
+
+        <div class="pilihan">
+          <fieldset>
+            <legend>susunan</legend>
+            <div class="pil" id="pil-tata"></div>
+          </fieldset>
+          <fieldset>
+            <legend>filter</legend>
+            <div class="pil" id="pil-saring"></div>
+          </fieldset>
+          <fieldset>
+            <legend>hitung mundur</legend>
+            <div class="pil" id="pil-timer"></div>
+          </fieldset>
+          <fieldset class="saklar">
+            <legend class="tersembunyi">lainnya</legend>
+            <label><input type="checkbox" id="cermin" checked /> cermin</label>
+            <label><input type="checkbox" id="suara" checked /> bunyi</label>
+          </fieldset>
+        </div>
+      </section>
+
+      <section class="keluaran" aria-labelledby="judul-keluaran">
+        <h2 class="tersembunyi" id="judul-keluaran">hasil cetak</h2>
+        <div class="celah" aria-hidden="true"><span></span></div>
+        <div class="tadah" id="tadah">
+          <div class="bayang-strip" id="bayang-strip" aria-hidden="true"></div>
+          <p class="tunggu" id="tunggu">fotomu keluar di sini</p>
+          <img class="hasil" id="hasil" alt="" hidden />
+        </div>
+        <div class="atur" id="atur" hidden>
+          <fieldset>
+            <legend>bingkai</legend>
+            <div class="pil" id="pil-bingkai"></div>
+          </fieldset>
+          <label class="tulis">
+            <span>tulisan di bawah</span>
+            <input type="text" id="tulisan" maxlength="24" autocomplete="off" spellcheck="false" placeholder="cekrek!" />
+          </label>
+          <div class="aksi">
+            <a class="simpan" id="simpan" download>simpan foto</a>
+            <button type="button" class="bagikan" id="bagikan" hidden>bagikan</button>
+            <button type="button" class="ulang" id="ulang">jepret lagi</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="kaki">
+      <p>dibikin iseng sama <a href="https://www.raffstw.my.id">rafi</a>. kode terbuka di <a href="https://github.com/Reverseflash45/cekrek">GitHub</a>.</p>
+    </footer>
+
+    <p class="tersembunyi" id="umum" aria-live="assertive"></p>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
