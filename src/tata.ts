@@ -1,7 +1,7 @@
 /* Tata letak cetakan. Satuan piksel pada skala 1; cetak.ts mengalikan SKALA.
    Strip 2×6 inci di 300 dpi = 600×1800, 4R (4×6 inci) = 1200×1800. */
 
-export type NamaTata = "strip4" | "strip3" | "kisi" | "polaroid";
+export type NamaTata = "strip4" | "strip3" | "kisi" | "kisi6" | "kisi8" | "polaroid";
 
 export type Kotak = { x: number; y: number; w: number; h: number };
 
@@ -23,6 +23,8 @@ const RESEP: Record<NamaTata, Resep & { label: string }> = {
   strip4: { label: "strip 4", lebar: 600, tinggi: 1800, kolom: 1, baris: 4, tepi: 36, sela: 20, aspek: 4 / 3 },
   strip3: { label: "strip 3", lebar: 600, tinggi: 1800, kolom: 1, baris: 3, tepi: 36, sela: 20, aspek: 1 },
   kisi: { label: "4 kotak", lebar: 1200, tinggi: 1800, kolom: 2, baris: 2, tepi: 48, sela: 24, aspek: 3 / 4 },
+  kisi6: { label: "6 kotak", lebar: 1200, tinggi: 1800, kolom: 2, baris: 3, tepi: 48, sela: 24, aspek: 9 / 8 },
+  kisi8: { label: "8 kotak", lebar: 1200, tinggi: 1800, kolom: 2, baris: 4, tepi: 48, sela: 24, aspek: 3 / 2 },
   polaroid: { label: "polaroid", lebar: 1080, tinggi: 1320, kolom: 1, baris: 1, tepi: 60, sela: 0, aspek: 1 },
 };
 

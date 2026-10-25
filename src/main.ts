@@ -119,7 +119,7 @@ buatPil($("pil-timer"), "timer", [3, 5, 10].map((n) => ({ nilai: n, label: `${n}
 buatPil(
   $("pil-bingkai"),
   "bingkai",
-  DAFTAR_BINGKAI.map((n) => ({ nilai: n, label: BINGKAI[n].label, isi: `<i class="contoh" style="background:${BINGKAI[n].latar}"></i>` })),
+  DAFTAR_BINGKAI.map((n) => ({ nilai: n, label: BINGKAI[n].label, isi: `<i class="contoh" style="background:${BINGKAI[n].contoh}"></i>` })),
   pil.bingkai,
   (v) => {
     pil.bingkai = v;
@@ -178,6 +178,7 @@ function terapkanSaring() {
 function gambarJepretan(aktif = -1) {
   const t = tataKini();
   jepretan.style.setProperty("--aspek", String(t.aspek));
+  jepretan.style.setProperty("--kolom", String(Math.min(4, t.slot.length)));
   jepretan.innerHTML = foto()
     .map((f, i) => {
       const cls = [f ? "isi" : "", i === aktif ? "aktif" : ""].join(" ").trim();

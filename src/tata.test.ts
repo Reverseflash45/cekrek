@@ -36,6 +36,17 @@ describe("tata letak", () => {
   });
 });
 
+describe("susunan banyak foto", () => {
+  it.each([["kisi6", 6], ["kisi8", 8]] as const)("%s berisi %i foto dalam 2 kolom", (n, jumlah) => {
+    const t = tata(n);
+    expect(t.slot).toHaveLength(jumlah);
+    expect(new Set(t.slot.map((k) => k.x)).size).toBe(2);
+  });
+  it("maksimal 8 foto per cetakan", () => {
+    expect(Math.max(...DAFTAR_TATA.map((n) => tata(n).slot.length))).toBe(8);
+  });
+});
+
 describe("potong tengah", () => {
   it("memotong sisi kiri-kanan untuk video lebar", () => {
     const p = potongTengah(1920, 1080, 1);
